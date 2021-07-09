@@ -30,7 +30,16 @@ instance Monad m => Monad (IntersperseT m) where
       y
 
 instance MonadTrans IntersperseT where
-  lift m = MkIntersperse (pure ()) m
+  lift m = MkIntersperse (pure ()) m -- this one is problematic
+  -- what I want is:
+  --  lift m =
+  --      before -- from somewhere, dunno where
+  --      MkIntersperse before m
+  --
+  -- assside from a big type issue, this will also
+  -- break the law: `lift . return = return`
+  -- because the before call could modify a StateT stack for example
+
 
 instance Applicative m => Applicative (IntersperseT m) where
   (<*>) (MkIntersperse before abF) (MkIntersperse before2 a) =
