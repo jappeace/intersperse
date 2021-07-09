@@ -1,6 +1,9 @@
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE KindSignatures #-}
 module Lib
   ( IntersperseT (..)
   )
@@ -15,9 +18,11 @@ import Control.Monad.Writer.Lazy
 --
 --   A good example is during the processing of some background task
 data IntersperseT m a = MkIntersperse {
-    before :: m ()
-  , runIntersperse :: m a
+  runIntersperse :: m a
   }
+
+class BeforeCall m where
+  before :: m ()
 
 type Intersperse = IntersperseT Identity
 
@@ -29,8 +34,11 @@ instance Monad m => Monad (IntersperseT m) where
       let MkIntersperse _ y = fun a
       y
 
-instance MonadTrans IntersperseT where
-  lift m = MkIntersperse (pure ()) m -- this one is problematic
+instance forall (m :: * -> *) . BeforeCall m => MonadTrans (IntersperseT m) where
+  lift :: m a -> IntersperseT n m a
+  lift m = do
+    before
+    MkIntersperse m -- this one is problematic
   -- what I want is:
   --  lift m =
   --      before -- from somewhere, dunno where
@@ -51,5 +59,5 @@ instance Applicative m => Applicative (IntersperseT m) where
 instance Functor f => Functor (IntersperseT f) where
   fmap fun (MkIntersperse before underlying) = MkIntersperse before $ fun <$> underlying
 
-instance MonadWriter w m => MonadWriter w (IntersperseT m) where
-  tell x = lift $ tell x
+-- instance MonadWriter w m => MonadWriter w (IntersperseT n m) where
+--   tell x = lift $ tell x
