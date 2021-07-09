@@ -7,6 +7,8 @@
 {-# LANGUAGE RankNTypes #-}
 module Lib
   ( IntersperseT (..)
+  , Intersperse
+  , BeforeCall(..)
   )
 where
 
@@ -19,7 +21,7 @@ import Control.Monad.Writer.Lazy
 --
 --   A good example is during the processing of some background task
 data IntersperseT m a = MkIntersperse {
-  runIntersperse :: BeforeCall m => m a
+  runIntersperse :: m a
   }
 
 class Monad m => BeforeCall m where
@@ -36,17 +38,7 @@ instance (BeforeCall m, Monad m) => Monad (IntersperseT m) where
       y
 
 instance MonadTrans IntersperseT where
-  lift :: m a -> IntersperseT m a
-  lift m =
-    MkIntersperse $ before >> m -- this one is problematic
-  -- what I want is:
-  --  lift m =
-  --      before -- from somewhere, dunno where
-  --      MkIntersperse before m
-  --
-  -- assside from a big type issue, this will also
-  -- break the law: `lift . return = return`
-  -- because the before call could modify a StateT stack for example
+  lift = MkIntersperse
 
 
 instance Applicative m => Applicative (IntersperseT m) where
@@ -58,5 +50,7 @@ instance Applicative m => Applicative (IntersperseT m) where
 instance Functor f => Functor (IntersperseT f) where
   fmap fun (MkIntersperse underlying) = MkIntersperse $ fun <$> underlying
 
--- instance MonadWriter w m => MonadWriter w (IntersperseT n m) where
---   tell x = lift $ tell x
+instance (BeforeCall m, MonadWriter w m) => MonadWriter w (IntersperseT m) where
+  tell = lift . tell
+  listen = lift . listen . runIntersperse
+  pass = lift . pass . runIntersperse
