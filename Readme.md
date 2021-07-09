@@ -4,13 +4,12 @@
 
 > There are too many monads.
 
+Intersperse library allows some sideffect to be called for every bind
+call.
 
-This is a small experiment in figuring out if I could ~~abuse~~ 
-monads to measure progress in the most generic way thinkable.
-The anwser looks like no.
+This allows you to measure progress in some background job for example.
 
-~~Intersperse library allows some sideffect to be called for every bind
-call.~~
 
-~~This allows you to measure progress in some background job for example.~~
-
+[ ] - check if the instances are lawfull.
+[ ] - try it out on something real.
+[ ] - publish.
