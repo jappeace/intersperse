@@ -52,17 +52,6 @@ dependencies:
 library:
   source-dirs: src
 
-executables:
-  exe:
-    main:                exe.hs
-    source-dirs:         app
-    dependencies:
-    - template
-    ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
-
 tests:
   unit:
     main:                Spec.hs
