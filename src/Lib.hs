@@ -26,16 +26,16 @@ class BeforeCall m where
 
 type Intersperse = IntersperseT Identity
 
-instance Monad m => Monad (IntersperseT m) where
-  (>>=) (MkIntersperse {before, runIntersperse}) fun = do
-    MkIntersperse before $ do
+instance (BeforeCall m, Monad m) => Monad (IntersperseT m) where
+  (>>=) (MkIntersperse {runIntersperse}) fun = do
+    MkIntersperse $ do
       before
       a <- runIntersperse
-      let MkIntersperse _ y = fun a
+      let MkIntersperse y = fun a
       y
 
-instance forall (m :: * -> *) . BeforeCall m => MonadTrans (IntersperseT m) where
-  lift :: m a -> IntersperseT n m a
+instance MonadTrans IntersperseT where
+  lift :: BeforeCall m => m a -> IntersperseT m a
   lift m = do
     before
     MkIntersperse m -- this one is problematic
@@ -50,14 +50,13 @@ instance forall (m :: * -> *) . BeforeCall m => MonadTrans (IntersperseT m) wher
 
 
 instance Applicative m => Applicative (IntersperseT m) where
-  (<*>) (MkIntersperse before abF) (MkIntersperse before2 a) =
+  (<*>) (MkIntersperse abF) (MkIntersperse a) =
     MkIntersperse
-      (before <* before2) -- is this unlawfull? I think this means it builds up before calls
       (abF <*> a)
-  pure x = MkIntersperse (pure ()) (pure x)
+  pure x = MkIntersperse (pure x)
 
 instance Functor f => Functor (IntersperseT f) where
-  fmap fun (MkIntersperse before underlying) = MkIntersperse before $ fun <$> underlying
+  fmap fun (MkIntersperse underlying) = MkIntersperse $ fun <$> underlying
 
 -- instance MonadWriter w m => MonadWriter w (IntersperseT n m) where
 --   tell x = lift $ tell x
