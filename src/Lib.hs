@@ -4,6 +4,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE RankNTypes #-}
 module Lib
   ( IntersperseT (..)
   )
@@ -18,11 +19,11 @@ import Control.Monad.Writer.Lazy
 --
 --   A good example is during the processing of some background task
 data IntersperseT m a = MkIntersperse {
-  runIntersperse :: m a
+  runIntersperse :: BeforeCall m => m a
   }
 
-class BeforeCall m where
-  before :: m ()
+class Monad m => BeforeCall m where
+  before ::  m ()
 
 type Intersperse = IntersperseT Identity
 
@@ -35,10 +36,9 @@ instance (BeforeCall m, Monad m) => Monad (IntersperseT m) where
       y
 
 instance MonadTrans IntersperseT where
-  lift :: BeforeCall m => m a -> IntersperseT m a
-  lift m = do
-    before
-    MkIntersperse m -- this one is problematic
+  lift :: m a -> IntersperseT m a
+  lift m =
+    MkIntersperse $ before >> m -- this one is problematic
   -- what I want is:
   --  lift m =
   --      before -- from somewhere, dunno where
