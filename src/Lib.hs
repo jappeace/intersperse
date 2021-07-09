@@ -1,9 +1,13 @@
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE UndecidableInstances #-}
 module Lib
   ( IntersperseT (..)
   )
 where
+
+import Data.Functor.Identity
+import Control.Monad.Writer.Lazy
 
 
 -- | this allows you to interlace bind calls with a before and after callback.
@@ -12,16 +16,21 @@ where
 --   A good example is during the processing of some background task
 data IntersperseT m a = MkIntersperse {
     before :: m ()
-  , underlying :: m a
+  , runIntersperse :: m a
   }
 
+type Intersperse = IntersperseT Identity
+
 instance Monad m => Monad (IntersperseT m) where
-  (>>=) (MkIntersperse {before, underlying}) fun = do
+  (>>=) (MkIntersperse {before, runIntersperse}) fun = do
     MkIntersperse before $ do
       before
-      a <- underlying
+      a <- runIntersperse
       let MkIntersperse _ y = fun a
       y
+
+instance MonadTrans IntersperseT where
+  lift m = MkIntersperse (pure ()) m
 
 instance Applicative m => Applicative (IntersperseT m) where
   (<*>) (MkIntersperse before abF) (MkIntersperse before2 a) =
@@ -32,3 +41,6 @@ instance Applicative m => Applicative (IntersperseT m) where
 
 instance Functor f => Functor (IntersperseT f) where
   fmap fun (MkIntersperse before underlying) = MkIntersperse before $ fun <$> underlying
+
+instance MonadWriter w m => MonadWriter w (IntersperseT m) where
+  tell x = lift $ tell x
