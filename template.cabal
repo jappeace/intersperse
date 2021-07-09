@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 05a9f907c857a63474c79fc33f2555f0b6c814556e2fa7668489547c917d9ab2
+-- hash: 415723907409575c34be3db283a40f5fb839837fd2a58ddc41035e5a950d6280
 
 name:           template
 version:        1.0.0
@@ -55,7 +55,7 @@ library
   ghc-options: -Wall -Wcompat -Wincomplete-uni-patterns -Wredundant-constraints -Wincomplete-record-updates -Widentities
   build-depends:
       base >=4.7 && <5
-
+    , mtl
   default-language: Haskell2010
 
 test-suite unit
@@ -91,5 +91,6 @@ test-suite unit
       base >=4.7 && <5
     , hspec
     , hspec-core
+    , mtl
     , template
   default-language: Haskell2010
