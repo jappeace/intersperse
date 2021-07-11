@@ -47,7 +47,7 @@ The unit test then shows how to run the program well:
   it "can program count, (assign a number to each bind call)" $ do
     ref <- newIORef 0
     void $ flip runReaderT ref $ unIORef
-         $ runIntersperse someProgram -- the runIntersperse call will tell you what instance to provide (as a type error)
+         $ runIntersperse someProgram -- the runIntersperse call will tell you what instance to provide (as a type error if you don't have it yet)
     res <- readIORef ref
     res `shouldBe` 2
 
