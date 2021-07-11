@@ -24,13 +24,16 @@ first we need to define the AppMonad that can run in:
 
 ```haskell
 -- some appstack, can be arbeterarly complex. We need a newtype to avoid orphans.
-newtype ProgramCounterTestM m a = MkProgramCounterTest { unIORef :: ReaderT (IORef Int) m a }
+newtype ProgramCounterTestM m a = MkProgramCounterTest {
+        unIORef :: ReaderT (IORef Int) m a
+    }
   deriving (Functor, Applicative, Monad, MonadIO, MonadReader (IORef Int) )
 ```
 
 Add the callback for counting
 ```haskell
--- the instance decides what to interspserse, we can use newtypes to make multiple for a single monad stack
+-- the instance decides what to interspserse,
+-- we can use newtypes to make multiple for a single monad stack
 instance BeforeBindCall (ProgramCounterTestM IO) where
   before = do
     ref <- ask
