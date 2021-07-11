@@ -39,21 +39,26 @@ spec =
               pure 'c'
     w `shouldBe` [1,2,1,3]
 
-  it "can program count" $ do
+  it "can program count, (assign a number to each bind call)" $ do
     ref <- newIORef 0
-    flip runReaderT ref $ unIORef $ runIntersperse $ do
-      liftIO $ putStrLn "hello " -- 0
-      liftIO $ putStrLn "world"  -- 1
-      pure 'x' -- 2
-
+    void $ flip runReaderT ref $ unIORef $ runIntersperse someProgram
     res <- readIORef ref
     res `shouldBe` 2
 
--- the instance decides what to interspserse
-instance BeforeBindCall (WriterTestM IO) where
-  before = tell [1]
+newtype ProgramCounterTestM m a = MkProgramCounterTest { unIORef :: ReaderT (IORef Int) m a }
+  deriving (Functor, Applicative, Monad, MonadIO, MonadReader (IORef Int) )
 
+-- the instance decides what to interspserse
 instance BeforeBindCall (ProgramCounterTestM IO) where
   before = do
     ref <- ask
     liftIO $ modifyIORef ref (+1)
+
+someProgram :: MonadIO m => m Char
+someProgram = do
+      liftIO $ putStrLn "hello " -- 0
+      liftIO $ putStrLn "world"  -- 1
+      pure 'x' -- 2
+
+instance BeforeBindCall (WriterTestM IO) where
+  before = tell [1]
