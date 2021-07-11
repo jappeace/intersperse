@@ -7,7 +7,8 @@ module Test.TestSpec
   )
 where
 
-import Lib
+
+import Control.Monad.Intersperse
 import Test.Hspec
 import Control.Monad.Writer.Lazy
 import Control.Monad.Reader
@@ -40,17 +41,19 @@ spec =
 
   it "can program count" $ do
     ref <- newIORef 0
-    flip runReaderT ref $ unIORef $ runIntersperse $
-      (liftIO $ putStrLn "hello ") >> (liftIO $ putStrLn "world") >> pure 'x'
+    flip runReaderT ref $ unIORef $ runIntersperse $ do
+      liftIO $ putStrLn "hello " -- 0
+      liftIO $ putStrLn "world"  -- 1
+      pure 'x' -- 2
 
     res <- readIORef ref
     res `shouldBe` 2
 
 -- the instance decides what to interspserse
-instance BeforeCall (WriterTestM IO) where
+instance BeforeBindCall (WriterTestM IO) where
   before = tell [1]
 
-instance BeforeCall (ProgramCounterTestM IO) where
+instance BeforeBindCall (ProgramCounterTestM IO) where
   before = do
     ref <- ask
     liftIO $ modifyIORef ref (+1)

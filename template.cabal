@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 415723907409575c34be3db283a40f5fb839837fd2a58ddc41035e5a950d6280
+-- hash: 98502acd3f8fb1e617916ff6543dee60d9a4aae296de4f5129ff26c7ceceb9f1
 
 name:           template
 version:        1.0.0
@@ -27,7 +27,7 @@ source-repository head
 
 library
   exposed-modules:
-      Lib
+      Control.Monad.Intersperse
   other-modules:
       Paths_template
   hs-source-dirs:
