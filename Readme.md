@@ -11,7 +11,7 @@ This allows you to measure progress in some background job for example.
 # Usage
 
 Consider some program you have:
-```
+```haskell
 someProgram :: MonadIO m => m Char
 someProgram = do
       liftIO $ putStrLn "hello " -- 0
@@ -21,7 +21,8 @@ someProgram = do
 ```
 Let's say you want to know how many bind calls there are,
 first we need to define the AppMonad that can run in:
-```
+
+```haskell
 -- some appstack, can be arbeterarly complex. We need a newtype to avoid orphans.
 newtype ProgramCounterTestM m a = MkProgramCounterTest { unIORef :: ReaderT (IORef Int) m a }
   deriving (Functor, Applicative, Monad, MonadIO, MonadReader (IORef Int) )
