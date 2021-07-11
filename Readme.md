@@ -10,7 +10,34 @@ This allows you to measure progress in some background job for example.
 
 # Usage
 
-The unit test shows it well:
+Consider some program you have:
+```
+someProgram :: MonadIO m => m Char
+someProgram = do
+      liftIO $ putStrLn "hello " -- 0
+      liftIO $ putStrLn "world"  -- 1
+      pure 'x' -- 2
+
+```
+Let's say you want to know how many bind calls there are,
+first we need to define the AppMonad that can run in:
+```
+-- some appstack, can be arbeterarly complex. We need a newtype to avoid orphans.
+newtype ProgramCounterTestM m a = MkProgramCounterTest { unIORef :: ReaderT (IORef Int) m a }
+  deriving (Functor, Applicative, Monad, MonadIO, MonadReader (IORef Int) )
+```
+
+Add the callback for counting
+```haskell
+-- the instance decides what to interspserse, we can use newtypes to make multiple for a single monad stack
+instance BeforeBindCall (ProgramCounterTestM IO) where
+  before = do
+    ref <- ask
+    liftIO $ modifyIORef ref (+1)
+
+```
+
+The unit test then shows how to run the program well:
 
 ```haskell
   it "can program count, (assign a number to each bind call)" $ do
@@ -20,39 +47,31 @@ The unit test shows it well:
     res <- readIORef ref
     res `shouldBe` 2
 
--- some appstack, can be arbeterarly complex. We need a newtype to avoid orphans.
-newtype ProgramCounterTestM m a = MkProgramCounterTest { unIORef :: ReaderT (IORef Int) m a }
-  deriving (Functor, Applicative, Monad, MonadIO, MonadReader (IORef Int) )
-
--- the instance decides what to interspserse, we can use newtypes to make multiple for a single monad stack
-instance BeforeBindCall (ProgramCounterTestM IO) where
-  before = do
-    ref <- ask
-    liftIO $ modifyIORef ref (+1)
-
--- the original program is left untouched, yet we now count the bind calls!
-someProgram :: MonadIO m => m Char
-someProgram = do
-      liftIO $ putStrLn "hello " -- 0
-      liftIO $ putStrLn "world"  -- 1
-      pure 'x' -- 2
-
 ```
+
+# Alternatives
+
++ https://hackage.haskell.org/package/interspersed
+  Uses a runtime state monad to intersperse effects.
+  My implementation has no additional runtime costs.
+  
++ https://hackage.haskell.org/package/logict-0.7.1.0/docs/Control-Monad-Logic-Class.html#v:interleave
+  
 
 # FAQ
 flamboyantly alternating queries.
 
 ## Is this lawful?
-Yes as far as my small brain can tell.
+Yes.
 I had to copy some laws to make the right number of before calls appear.
 For example, fmap will now also result in a before call because of a monad law.
-Applying results in two before calls.
+Applying `(<*>)` results in two before calls.
  
-Does lawfulness really matter if it's useful? 
+But, does lawfulness really matter if it's useful? 
 Most of mtl is a big hack.
 
 ## Can I use this to create a debugger
-not for arbitrary function calls:
+Not for arbitrary function calls:
 Yes, function arrow `(->)` is a monad, but
 the function application mechanism isn't overidable as far as I know,
 and it needs to be mtl style, all current code is written with the concrete
