@@ -14,6 +14,7 @@ where
 
 import Data.Functor.Identity
 import Control.Monad.Writer.Lazy
+import Data.Proxy
 
 
 -- | this allows you to interlace bind calls with a before and after callback.
@@ -54,3 +55,6 @@ instance (BeforeCall m, MonadWriter w m) => MonadWriter w (IntersperseT m) where
   tell = lift . tell
   listen = lift . listen . runIntersperse
   pass = lift . pass . runIntersperse
+
+instance (BeforeCall m, MonadIO m) => MonadIO (IntersperseT m) where
+  liftIO = MkIntersperse . liftIO
