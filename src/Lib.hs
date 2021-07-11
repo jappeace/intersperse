@@ -6,9 +6,9 @@
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE RankNTypes #-}
 module Lib
-  ( IntersperseT (..)
+  ( IntersperseT
   , Intersperse
-  , BeforeCall(..)
+  , runIntersperseT
   )
 where
 
@@ -20,37 +20,43 @@ import Control.Monad.Writer.Lazy
 --   this is usefull to show/log progress on a computation at every side effect.
 --
 --   A good example is during the processing of some background task
-data IntersperseT m a = MkIntersperse {
-  runIntersperse :: m a
+data IntersperseT m a = MkIntersperse
+  { iBefore ::  m ()
+  , iUnderlying :: m a
   }
 
-class Monad m => BeforeCall m where
-  before ::  m ()
+runIntersperseT :: m () -> IntersperseT m a -> m a
+runIntersperseT before inter =
+  iUnderlying $ inter { iBefore = before }
+
 
 type Intersperse = IntersperseT Identity
 
-instance (BeforeCall m, Monad m) => Monad (IntersperseT m) where
-  (>>=) (MkIntersperse {runIntersperse}) fun = do
-    MkIntersperse $ do
-      before
-      a <- runIntersperse
-      let MkIntersperse y = fun a
+instance (Monad m) => Monad (IntersperseT m) where
+  (>>=) (MkIntersperse {iUnderlying, iBefore}) fun = do
+    MkIntersperse iBefore $ do
+      iBefore
+      a <- iUnderlying
+      let MkIntersperse _ y = fun a
       y
 
 instance MonadTrans IntersperseT where
-  lift = MkIntersperse
+  lift = MkIntersperse (pure ())
 
 
 instance Applicative m => Applicative (IntersperseT m) where
-  (<*>) (MkIntersperse abF) (MkIntersperse a) =
-    MkIntersperse
+  (<*>) (MkIntersperse before abF) (MkIntersperse _ a) =
+    MkIntersperse before
       (abF <*> a)
-  pure x = MkIntersperse (pure x)
+  pure x = MkIntersperse (pure ()) (pure x)
 
 instance Functor f => Functor (IntersperseT f) where
-  fmap fun (MkIntersperse underlying) = MkIntersperse $ fun <$> underlying
+  fmap fun (MkIntersperse before underlying) = MkIntersperse before $ fun <$> underlying
 
-instance (BeforeCall m, MonadWriter w m) => MonadWriter w (IntersperseT m) where
+instance (MonadWriter w m) => MonadWriter w (IntersperseT m) where
   tell = lift . tell
-  listen = lift . listen . runIntersperse
-  pass = lift . pass . runIntersperse
+  listen = lift . listen . iUnderlying
+  pass = lift . pass . iUnderlying
+
+instance MonadIO m => MonadIO (IntersperseT m) where
+  liftIO = MkIntersperse (pure ()) . liftIO
