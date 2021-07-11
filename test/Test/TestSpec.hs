@@ -24,9 +24,6 @@ two = 2
 newtype WriterTestM m a =  MkWriterTestM { unListstack :: WriterT [Int] m a }
   deriving (Functor, Applicative, Monad, MonadWriter [Int])
 
-newtype ProgramCounterTestM m a = MkProgramCounterTest { unIORef :: ReaderT (IORef Int) m a }
-  deriving (Functor, Applicative, Monad, MonadIO, MonadReader (IORef Int) )
-
 spec :: Spec
 spec =
   describe "The sanity of our test setup" $ do

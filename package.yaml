@@ -1,10 +1,10 @@
-name:                template
+name:                intersperse
 version:             1.0.0
 license:             MIT
 author:              "Jappie Klooster"
 maintainer:          "jappieklooster@hotmail.com"
 copyright:           "2020 Jappie Klooster"
-github:              "jappeace/haskell-template-project"
+github:              "jappeace/haskell-intersperse-project"
 
 extra-source-files:
 - Readme.md
@@ -61,4 +61,4 @@ tests:
     dependencies:
     - hspec
     - hspec-core
-    - template
+    - intersperse

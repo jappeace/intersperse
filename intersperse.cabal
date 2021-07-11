@@ -3,13 +3,11 @@ cabal-version: 1.12
 -- This file has been generated from package.yaml by hpack version 0.34.4.
 --
 -- see: https://github.com/sol/hpack
---
--- hash: 98502acd3f8fb1e617916ff6543dee60d9a4aae296de4f5129ff26c7ceceb9f1
 
-name:           template
+name:           intersperse
 version:        1.0.0
-homepage:       https://github.com/jappeace/haskell-template-project#readme
-bug-reports:    https://github.com/jappeace/haskell-template-project/issues
+homepage:       https://github.com/jappeace/haskell-intersperse-project#readme
+bug-reports:    https://github.com/jappeace/haskell-intersperse-project/issues
 author:         Jappie Klooster
 maintainer:     jappieklooster@hotmail.com
 copyright:      2020 Jappie Klooster
@@ -23,13 +21,13 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/jappeace/haskell-template-project
+  location: https://github.com/jappeace/haskell-intersperse-project
 
 library
   exposed-modules:
       Control.Monad.Intersperse
   other-modules:
-      Paths_template
+      Paths_intersperse
   hs-source-dirs:
       src
   default-extensions:
@@ -63,7 +61,7 @@ test-suite unit
   main-is: Spec.hs
   other-modules:
       Test.TestSpec
-      Paths_template
+      Paths_intersperse
   hs-source-dirs:
       test
   default-extensions:
@@ -91,6 +89,6 @@ test-suite unit
       base >=4.7 && <5
     , hspec
     , hspec-core
+    , intersperse
     , mtl
-    , template
   default-language: Haskell2010
