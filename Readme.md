@@ -92,7 +92,7 @@ right now so I didn't build it.
 
 ## Can you explain this using drugboats.
 
-!(https://www.youtube.com/watch?v=O2rGTXHvPCQ)[]
+https://www.youtube.com/watch?v=O2rGTXHvPCQ
 
 of course.
 
